@@ -1,3 +1,4 @@
+using NaughtyAttributes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ public class GameProgress : MonoBehaviour
 
     string _pathToJson;
 
-    [SerializeField] private GameLevels _game;
+    [SerializeField] public GameLevels Game;
 
     private void Awake() {
         //Singleton
@@ -19,26 +20,7 @@ public class GameProgress : MonoBehaviour
 
         //Path to json's game progress
         _pathToJson = Application.persistentDataPath + "/JSON/GameProgress.json";
-
-        //If don't have a json, create it, else, load game progress
-        if(!File.Exists(_pathToJson)) { 
-            Directory.CreateDirectory(Application.persistentDataPath + "/JSON"); 
-            File.Create(_pathToJson);
-        }
-        else { LoadProgress(); }
     }
-
-    #region SAVE AND LOAD PROGRESS
-    public void SaveProgress() {
-        string json = JsonUtility.ToJson(_game);
-        File.WriteAllText(_pathToJson, json);
-    }
-
-    public void LoadProgress() {
-        _game = JsonUtility.FromJson<GameLevels>(_pathToJson);
-    }
-
-    #endregion
 }
 
 //Infos of levels to save and load progress
@@ -47,12 +29,13 @@ public class Level{
     public string LevelName;
     public bool IsDone;
     public int Score;
+    public string SceneReference;
 }
 
 //List of levels to transform to json
 [Serializable]
 public class GameLevels {
-    [SerializeField] private List<Level> Levels;
+    [SerializeField] public List<Level> Levels;
 
     public GameLevels() { }
     public GameLevels(List<Level> levels) { Levels = levels; }
