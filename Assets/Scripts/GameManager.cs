@@ -2,6 +2,7 @@ using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -15,6 +16,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] private bool _useKeyboard = false;
     [SerializeField] private ScoreManager _scoreManager;
     private int _attempts = 0;
+
+    [Header("Audios")]
+    [SerializeField] private AudioClip _correctSFX;
+    [SerializeField] private AudioClip _incorrectSFX;
 
     [Header("Intro")]
     [SerializeField] private GameObject _choiceGameMethodScreen;
@@ -55,6 +60,8 @@ public class GameManager : MonoBehaviour
         _as = GetComponent<AudioSource>();
         _loader = GetComponent<AsyncLoader>();
 
+        _audioButton.onClick.RemoveAllListeners();
+        _audioButton.onClick.AddListener(() => { if (_randomGame) PlayAudio(_randomOrder[_indexLetter]); else PlayAudio(_indexLetter); });
     }
 
     public void SetGameMode(bool keyboard) {
@@ -117,7 +124,14 @@ public class GameManager : MonoBehaviour
     List<int> wrongIndexes = new List<int>();
 
     private void SetLetter(int index) {
-        _textLetter.text = _alphabet[index].phonetic;
+        if(_randomGame) {
+            _textLetter.text = _alphabet[_randomOrder[index]].phonetic;
+            PlayAudio(_randomOrder[index]);
+        }
+        else {
+            _textLetter.text = _alphabet[index].phonetic;
+            PlayAudio(index);
+        }
 
         _audioButton.GetComponent<RectTransform>().DOScale(1, _transitionTime);
 
@@ -133,7 +147,10 @@ public class GameManager : MonoBehaviour
 
                 if (indexTemp == 0) {
                     _answersButtons[indexTemp].GetComponent<Button>().onClick.AddListener(() => { Correct(index, _answersButtons[indexTemp].GetComponent<Button>()); });
-                    _answersButtons[indexTemp].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = _alphabet[index].letter;
+                    if(_randomGame)
+                        _answersButtons[indexTemp].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = _alphabet[_randomOrder[index]].letter;
+                    else
+                        _answersButtons[indexTemp].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = _alphabet[index].letter;
                 }
                 else {
                     int wrong = UnityEngine.Random.Range(0, _alphabet.Count - 1);
@@ -170,13 +187,22 @@ public class GameManager : MonoBehaviour
         _attempts = 0;
     }
 
-    private void Correct(int clip, Button button = null) {
-        PlayAudio(clip);
+    private async void Correct(int clip, Button button = null) {
+        BackgroundMusic.Instance.PlaySFX(_correctSFX);
+        if (_randomGame) {
+            PlayAudio(_randomOrder[clip]);
+            await Task.Delay(TimeSpan.FromSeconds(_alphabet[_randomOrder[clip]].clip.length));
+        }
+        else {
+            PlayAudio(clip);
+            await Task.Delay(TimeSpan.FromSeconds(_alphabet[clip].clip.length));
+        }
         _scoreManager.AddScore(_attempts);
         NextLetter();
     }
 
     private void Incorrect(int clip, Button button = null) {
+        BackgroundMusic.Instance.PlaySFX(_incorrectSFX);
         PlayAudio(clip);
         _attempts++;
         if(button != null) { button.interactable = false; }
