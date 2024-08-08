@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -22,31 +24,57 @@ public class PlayerInfo : MonoBehaviour
         }
     }
 
-    private void Start() {
+    private async void Start() {
 
-        GameInfo.username = "bpasofkpafias pfaso";
-
-        if(!Directory.Exists(Application.persistentDataPath + "/JSON")) {
+        if (!Directory.Exists(Application.persistentDataPath + "/JSON")) {
             Directory.CreateDirectory(Application.persistentDataPath + "/JSON");
         }
 
-        if(!File.Exists(Application.persistentDataPath + "/JSON/gameinfo.json")) {
+        if (!File.Exists(Application.persistentDataPath + "/JSON/gameinfo.json")) {
             File.Create(Application.persistentDataPath + "/JSON/gameinfo.json");
-            File.WriteAllText(Application.persistentDataPath + "/JSON/gameinfo.json", "Hello");
-            //var json = JsonUtility.ToJson(GameInfo);
-            //File.WriteAllText(Application.persistentDataPath + "/JSON/gameinfo.json", json);
         }
-        //else {
-        //    GameInfo = JsonUtility.FromJson<GameInfo>(Application.persistentDataPath + "/JSON/GameInfo.json");
-        //}
+        else {
+            GameInfo = JsonUtility.FromJson<GameInfo>(Application.persistentDataPath + "/JSON/GameInfo.json");
+        }
+
+        await Task.Delay(3000);
+
+        SaveGameData(0, 6, true);
         
+    }
+
+    public void SaveGameData(int indexGame, int score, bool complete) {
+
+        if(complete) { GameInfo.progress[indexGame].complete = true; }
+
+        GameInfo.progress[indexGame].highScore.Add(score);
+
+        for(int i = 0; i < GameInfo.progress[indexGame].highScore.Count; i++) {
+            for(int j = 0; j < GameInfo.progress[indexGame].highScore.Count; j++) {
+                if (GameInfo.progress[indexGame].highScore[i] > GameInfo.progress[indexGame].highScore[j]) {
+                    int prev = GameInfo.progress[indexGame].highScore[i];
+                    int now = GameInfo.progress[indexGame].highScore[j];
+
+                    GameInfo.progress[indexGame].highScore[i] = now;
+                    GameInfo.progress[indexGame].highScore[j] = prev;
+                }
+            }
+        }
+
+        if(GameInfo.progress[indexGame].highScore.Count > 5) {
+            GameInfo.progress[indexGame].highScore.RemoveAt(5);
+        }
+
+        var json = JsonUtility.ToJson(GameInfo);
+
+        File.WriteAllText(Application.persistentDataPath + "/JSON/gameinfo.json", json);
     }
 }
 
 [Serializable]
 public class GameInfo {
     public string username;
-    //public List<ProgressInfo> progress = new List<ProgressInfo>();
+    public List<ProgressInfo> progress = new List<ProgressInfo>();
 }
 
 [Serializable]

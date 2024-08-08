@@ -1637,6 +1637,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   GameInfo:
     username: Teste
+    progress:
+    - indexGame: 0
+      complete: 0
+      highScore: 0500000004000000030000000200000001000000
 --- !u!4 &1896957057
 Transform:
   m_ObjectHideFlags: 0
