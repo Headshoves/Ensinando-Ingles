@@ -7,12 +7,6 @@ public class BackgroundMusic : MonoBehaviour
 
     [SerializeField] private AudioSource _SFXAudioSource;
     [SerializeField] private AudioClip _click;
-
-    public static BackgroundMusic Instance { get; private set; }
-
-    private void Awake() {
-        Instance = this;
-    }
     void Start()
     {
         if(FindObjectsOfType<BackgroundMusic>().Length > 1) {

@@ -24,24 +24,24 @@ public class PlayerInfo : MonoBehaviour
         }
     }
 
-    private async void Start() {
+    //private async void Start() {
 
-        if (!Directory.Exists(Application.persistentDataPath + "/JSON")) {
-            Directory.CreateDirectory(Application.persistentDataPath + "/JSON");
-        }
+    //    if (!Directory.Exists(Application.persistentDataPath + "/JSON")) {
+    //        Directory.CreateDirectory(Application.persistentDataPath + "/JSON");
+    //    }
 
-        if (!File.Exists(Application.persistentDataPath + "/JSON/gameinfo.json")) {
-            File.Create(Application.persistentDataPath + "/JSON/gameinfo.json");
-        }
-        else {
-            GameInfo = JsonUtility.FromJson<GameInfo>(Application.persistentDataPath + "/JSON/GameInfo.json");
-        }
+    //    if (!File.Exists(Application.persistentDataPath + "/JSON/gameinfo.json")) {
+    //        File.Create(Application.persistentDataPath + "/JSON/gameinfo.json");
+    //    }
+    //    else {
+    //        GameInfo = JsonUtility.FromJson<GameInfo>(Application.persistentDataPath + "/JSON/GameInfo.json");
+    //    }
 
-        await Task.Delay(3000);
+    //    await Task.Delay(3000);
 
-        SaveGameData(0, 6, true);
-        
-    }
+    //    SaveGameData(0, 6, true);
+
+    //}
 
     public void SaveGameData(int indexGame, int score, bool complete) {
 

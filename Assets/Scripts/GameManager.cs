@@ -9,8 +9,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class GameManager : MonoBehaviour
-{
+public class GameManager : MonoBehaviour {
     [Header("General")]
     [SerializeField] private float _transitionTime = .2f;
     [SerializeField] private bool _useKeyboard = false;
@@ -35,7 +34,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private RectTransform _helpScreen;
     [SerializeField] private TextMeshProUGUI _helpText;
     [SerializeField] private GameObject _helpButton;
-    [SerializeField][TextArea(1,10)] private List<string> _helpTexts = new List<string>();
+    [SerializeField][TextArea(1, 10)] private List<string> _helpTexts = new List<string>();
 
     private int _helpIndex = 0;
 
@@ -55,6 +54,7 @@ public class GameManager : MonoBehaviour
 
     private AudioSource _as;
     private AsyncLoader _loader;
+    private BackgroundMusic _bgm;
 
     private void Start() {
         _as = GetComponent<AudioSource>();
@@ -80,19 +80,19 @@ public class GameManager : MonoBehaviour
 
         _indexLetter = 0;
 
-        _choiceGameDifficultScreen.GetComponent<CanvasGroup>().DOFade(0, _transitionTime).OnComplete(() => { 
+        _choiceGameDifficultScreen.GetComponent<CanvasGroup>().DOFade(0, _transitionTime).OnComplete(() => {
             _choiceGameDifficultScreen.SetActive(false);
-           
-            if(_randomGame) {
+
+            if (_randomGame) {
                 _randomOrder.Clear();
 
                 for (int i = 0; i < 26; i++) {
                     _randomOrder.Add(i);
                 }
 
-                for(int i = 0; i < _randomOrder.Count; i++) {
+                for (int i = 0; i < _randomOrder.Count; i++) {
                     int temp = _randomOrder[i];
-                    int newPos = UnityEngine.Random.Range(0, _randomOrder.Count -1);
+                    int newPos = UnityEngine.Random.Range(0, _randomOrder.Count - 1);
                     int valuePos = _randomOrder[newPos];
 
                     _randomOrder[i] = valuePos;
@@ -124,7 +124,7 @@ public class GameManager : MonoBehaviour
     List<int> wrongIndexes = new List<int>();
 
     private void SetLetter(int index) {
-        if(_randomGame) {
+        if (_randomGame) {
             _textLetter.text = _alphabet[_randomOrder[index]].phonetic;
             PlayAudio(_randomOrder[index]);
         }
@@ -146,8 +146,8 @@ public class GameManager : MonoBehaviour
                 _answersButtons[indexTemp].GetComponent<Button>().onClick.RemoveAllListeners();
 
                 if (indexTemp == 0) {
-                    _answersButtons[indexTemp].GetComponent<Button>().onClick.AddListener(() => { Correct(index, _answersButtons[indexTemp].GetComponent<Button>()); });
-                    if(_randomGame)
+                    _answersButtons[indexTemp].GetComponent<Button>().onClick.AddListener(() => { StartCoroutine(Correct(index, _answersButtons[indexTemp].GetComponent<Button>())); });
+                    if (_randomGame)
                         _answersButtons[indexTemp].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = _alphabet[_randomOrder[index]].letter;
                     else
                         _answersButtons[indexTemp].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = _alphabet[index].letter;
@@ -155,8 +155,8 @@ public class GameManager : MonoBehaviour
                 else {
                     int wrong = UnityEngine.Random.Range(0, _alphabet.Count - 1);
 
-                    for(int r = 0; r < 26; r++) {
-                        if(wrong == index || wrongIndexes.Contains(wrong)) {
+                    for (int r = 0; r < 26; r++) {
+                        if (wrong == index || wrongIndexes.Contains(wrong)) {
                             wrong = UnityEngine.Random.Range(0, _alphabet.Count - 1);
                         }
                         else {
@@ -187,25 +187,29 @@ public class GameManager : MonoBehaviour
         _attempts = 0;
     }
 
-    private async void Correct(int clip, Button button = null) {
-        BackgroundMusic.Instance.PlaySFX(_correctSFX);
+    private IEnumerator Correct(int clip, Button button = null) {
+        if (_bgm == null) { _bgm = FindObjectOfType<BackgroundMusic>(); }
+
+        _bgm.PlaySFX(_correctSFX);
         if (_randomGame) {
             PlayAudio(_randomOrder[clip]);
-            await Task.Delay(TimeSpan.FromSeconds(_alphabet[_randomOrder[clip]].clip.length));
+            yield return new WaitForSeconds(_alphabet[_randomOrder[clip]].clip.length);
         }
         else {
             PlayAudio(clip);
-            await Task.Delay(TimeSpan.FromSeconds(_alphabet[clip].clip.length));
+            yield return new WaitForSeconds(_alphabet[clip].clip.length);
         }
         _scoreManager.AddScore(_attempts);
         NextLetter();
     }
 
     private void Incorrect(int clip, Button button = null) {
-        BackgroundMusic.Instance.PlaySFX(_incorrectSFX);
+        if (_bgm == null) { _bgm = FindObjectOfType<BackgroundMusic>(); }
+
+        _bgm.PlaySFX(_incorrectSFX);
         PlayAudio(clip);
         _attempts++;
-        if(button != null) { button.interactable = false; }
+        if (button != null) { button.interactable = false; }
     }
 
     private void NextLetter() {
@@ -217,7 +221,7 @@ public class GameManager : MonoBehaviour
         }
 
         _audioButton.GetComponent<RectTransform>().DOScale(0, _transitionTime).OnComplete(() => {
-            if(_indexLetter < 26) {
+            if (_indexLetter < 26) {
                 if (_randomGame) { SetLetter(_indexLetter); } else { SetLetter(_indexLetter); }
             }
             else {
@@ -236,11 +240,11 @@ public class GameManager : MonoBehaviour
         _endGameScreen.SetActive(true);
         _endGameScreen.GetComponent<CanvasGroup>().DOFade(1, .5f);
 
-        if(_scoreManager.GetScore() == 5) {
+        if (_scoreManager.GetScore() == 5) {
             _endText.text = "Você concluiu a atividade com maestria com 5 estrelas! \n Deseja jogar novamente?";
         }
         else if (_scoreManager.GetScore() > 1 && _scoreManager.GetScore() < 5) {
-            _endText.text = "Você mandou bem, fez "+ _scoreManager.GetScore() + " estrelas!\n Mas pode melhorar! \n Deseja melhorar sua pontuação?";
+            _endText.text = "Você mandou bem, fez " + _scoreManager.GetScore() + " estrelas!\n Mas pode melhorar! \n Deseja melhorar sua pontuação?";
         }
         else {
             _endText.text = "Você foi bem, conseguiu 1 estrela, mas acho que precisa praticar mais! \n Deseja praticar mais uma vez?";
@@ -248,7 +252,7 @@ public class GameManager : MonoBehaviour
     }
 
     private void Update() {
-        if(Input.GetKeyDown(KeyCode.Space)) { SceneManager.LoadScene(0); }
+        if (Input.GetKeyDown(KeyCode.Space)) { SceneManager.LoadScene(0); }
 
         if (_useKeyboard) {
             if (Input.GetKeyDown(KeyCode.A)) { CheckKeyboardLetter("A"); }
